@@ -9,11 +9,10 @@
 [
   "{{"
   "}}"
-  "{%"
-  "{%-"
-  "%}"
-  "-%}"
-  "+%}"
+  "statement_start"
+  "statement_end"
+  "raw_start"
+  "raw_end"
 ] @macro
 
 [

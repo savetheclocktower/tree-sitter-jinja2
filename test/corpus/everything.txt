@@ -38,15 +38,30 @@ Whitespace control
 ================================================================================
 {% foo + -%}
 {% foo - +%}
-{%- foo true %}
+{%- foo - %}
+{%- foo - -%}
+{%- foo - +%}
+{%+ foo - %}
+{%+ foo - -%}
+{%+ foo - +%}
 
 {%- if True -%}
 {%- elif - +%}
-{%- else %}
-{% endif -%}
+{%- else +%}
+{%- endif -%}
 --------------------------------------------------------------------------------
 
 (template
+  (custom_statement
+    (custom_tag))
+  (custom_statement
+    (custom_tag))
+  (custom_statement
+    (custom_tag))
+  (custom_statement
+    (custom_tag))
+  (custom_statement
+    (custom_tag))
   (custom_statement
     (custom_tag))
   (custom_statement
@@ -243,6 +258,20 @@ asdfj
     (text))
   (with_statement
     assignment: (expression)))
+
+================================================================================
+raw statement
+================================================================================
+{% raw %}
+{% if foo %}
+{% custom %}
+{{ ouptut }}
+{% endraw %}
+--------------------------------------------------------------------------------
+
+(template
+  (raw_statement
+    (text)))
 
 ================================================================================
 custom tag statement

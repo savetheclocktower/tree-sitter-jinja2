@@ -1,0 +1,4 @@
+{
+  "ext": "js,txt,scm",
+  "watch": ["grammar.js", "test/corpus", "queries"]
+}

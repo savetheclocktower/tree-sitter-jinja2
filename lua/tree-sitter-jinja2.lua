@@ -18,11 +18,6 @@ function M.register_parser()
     parser_config = parsers
   end
 
-  if type(parser_config.jinja2) == "table" then
-    -- A jinja2 parser is already registered. Avoid overwriting it.
-    return
-  end
-
   parser_config.jinja2 = {
     install_info = {
       url = plugin_dir,

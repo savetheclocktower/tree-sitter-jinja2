@@ -1,0 +1,28 @@
+{
+  "grammars": [
+    {
+      "name": "jinja2",
+      "camelcase": "Jinja2",
+      "scope": "source.jinja2",
+      "path": ".",
+      "file-types": null,
+      "injection-regex": "^jinja2$"
+    }
+  ],
+  "metadata": {
+    "version": "0.1.0",
+    "license": "MIT",
+    "description": "Jinja2 grammar for tree-sitter",
+    "links": {
+      "repository": "https://github.com/geigerzaehler/tree-sitter-jinja2"
+    }
+  },
+  "bindings": {
+    "c": true,
+    "go": true,
+    "node": true,
+    "python": true,
+    "rust": true,
+    "swift": true
+  }
+}

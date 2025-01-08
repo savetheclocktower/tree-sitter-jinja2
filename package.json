@@ -21,15 +21,15 @@
     "src/**"
   ],
   "dependencies": {
-    "node-addon-api": "^7.1.0",
-    "node-gyp-build": "^4.8.0",
-    "prettier": "^3.2.5"
+    "node-addon-api": "^8.3.0",
+    "node-gyp-build": "^4.8.4",
+    "prettier": "^3.4.2"
   },
   "devDependencies": {
-    "nodemon": "^3.1.0",
-    "prebuildify": "^6.0.0",
-    "tree-sitter-cli": "^0.22.2",
-    "typescript": "^5.4.3"
+    "nodemon": "^3.1.9",
+    "prebuildify": "^6.0.1",
+    "tree-sitter-cli": "^0.24.6",
+    "typescript": "^5.7.2"
   },
   "peerDependencies": {
     "tree-sitter": "^0.21.0"
@@ -52,5 +52,6 @@
       "scope": "source.jinja2",
       "injection-regex": "^jinja2$"
     }
-  ]
+  ],
+  "packageManager": "npm@11.0.0+sha512.11dff29565d2297c74e7c594a9762581bde969f0aa5cbe6f5b3644bf008a16c065ece61094d9ffbb81125be38df8e1ba43eb8244b3d30c61eb797e9a2440e3ec"
 }

@@ -26,26 +26,63 @@ module.exports = grammar({
 
   conflicts: ($) => [[$.elif_block]],
 
+  externals: ($) => [
+    $.raw_text,
+    // TODO: An external for line statements. (Might also need to add them to
+    // extras?)
+    $.error_sentinel
+  ],
+
   rules: {
     template: ($) => repeat($._item),
 
     _item: ($) => choice($._statement, $.output, $.comment, $.text),
 
-    text: (_) =>
-      prec.right(
-        repeat1(choice(token(prec(-1, /\{/)), token(prec(1, /[^\s\{][^\{]*/)))),
+    text: (_) => prec.right(
+      repeat1(
+        choice(
+          token(prec(-1, /\{/)),
+          token(prec(1, /[^\s\{][^\{]*/))
+        )
       ),
+    ),
 
-    comment: () => seq("{#", repeat(/[^\#]+|[\#]/), "#}"),
+    comment: (_) => seq(
+      "{#",
+      repeat(/[^\#]+|[\#]/),
+      "#}"
+    ),
 
-    output: ($) =>
-      seq("{{", alias(optional($._output_code), $.expression), "}}"),
-    _output_code: () => prec.right(repeat1(/[^\s\}\-\+]+|[\}\-\+]/)),
+    output: ($) => seq(
+      "{{",
+      alias(
+        // It's optional because we want parsing not to go haywire when
+        // someone’s got `{{}}` with the cursor in the middle.
+        optional($._output_code),
+        $.expression
+      ),
+      "}}"
+    ),
 
-    _expression_in_statement: () => repeat1(/[^\s\%\-\+]+|[\%\-\+]/),
+    _output_code: () => prec.right(
+      repeat1(/[^\s\}\-\+]+|[\}\-\+]/)
+    ),
 
-    _statement_start: (_) => choice("{%", "{%+", "{%-"),
-    _statement_end: (_) => choice("%}", "+%}", "-%}"),
+    _expression_in_statement: () => repeat1(
+      /[^\s\%\-\+]+|[\%\-\+]/
+    ),
+
+    _statement_start: (_) => choice(
+      "{%",
+      "{%+",
+      "{%-"
+    ),
+
+    _statement_end: (_) => choice(
+      "%}",
+      "+%}",
+      "-%}"
+    ),
 
     _statement: ($) =>
       choice(
@@ -271,12 +308,11 @@ module.exports = grammar({
     raw_block: ($) =>
       seq(
         $.raw_start_statement,
-        $.text,
+        alias($.raw_text, $.text),
         $.raw_end_statement
       ),
 
-    custom_statement: ($) =>
-      prec.dynamic(
+    custom_statement: ($) => prec.dynamic(
         -1,
         seq(
           $._statement_start,
@@ -285,8 +321,11 @@ module.exports = grammar({
         ),
       ),
 
-    identifier: () => /[\w]+/,
+    identifier: () => token(prec(-2, /[\w]+/)),
 
-    string: () => choice(seq(`"`, /[^\"]+/, `"`), seq(`'`, /[^\']+/, `'`)),
+    string: () => choice(
+      seq(`"`, /[^\"]+/, `"`),
+      seq(`'`, /[^\']+/, `'`)
+    ),
   },
 });

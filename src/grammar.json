@@ -1247,8 +1247,13 @@
           "name": "raw_start_statement"
         },
         {
-          "type": "SYMBOL",
-          "name": "text"
+          "type": "ALIAS",
+          "content": {
+            "type": "SYMBOL",
+            "name": "raw_text"
+          },
+          "named": true,
+          "value": "text"
         },
         {
           "type": "SYMBOL",
@@ -1283,8 +1288,15 @@
       }
     },
     "identifier": {
-      "type": "PATTERN",
-      "value": "[\\w]+"
+      "type": "TOKEN",
+      "content": {
+        "type": "PREC",
+        "value": -2,
+        "content": {
+          "type": "PATTERN",
+          "value": "[\\w]+"
+        }
+      }
     },
     "string": {
       "type": "CHOICE",
@@ -1338,7 +1350,16 @@
     ]
   ],
   "precedences": [],
-  "externals": [],
+  "externals": [
+    {
+      "type": "SYMBOL",
+      "name": "raw_text"
+    },
+    {
+      "type": "SYMBOL",
+      "name": "error_sentinel"
+    }
+  ],
   "inline": [],
   "supertypes": []
 }

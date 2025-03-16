@@ -12,13 +12,16 @@ if statement
 --------------------------------------------------------------------------------
 
 (template
-  (if_statement
-    (expression)
-    (text))
-  (if_statement
-    (expression)
-    (else_statement
-      (text))))
+  (if_block
+    (if_start_statement (expression))
+    (text)
+    (if_end_statement))
+  (if_block
+    (if_start_statement (expression))
+    (else_block
+      (else_statement)
+      (text)
+      (if_end_statement))))
 
 ================================================================================
 if statement wit elif
@@ -37,21 +40,35 @@ if statement wit elif
 --------------------------------------------------------------------------------
 
 (template
-  (if_statement
-    condition: (expression)
-    elif: (elif_statement
-      condition: (expression))
-    elif: (elif_statement
-      condition: (expression)))
-  (if_statement
-    condition: (expression)
-    elif: (elif_statement
-      condition: (expression)
+  (if_block
+    (if_start_statement condition: (expression))
+    elif: (elif_block
+      (elif_statement condition: (expression))
+    )
+    elif: (elif_block
+      (elif_statement condition: (expression))
+    )
+    (if_end_statement)
+  )
+
+  (if_block
+    (if_start_statement condition: (expression))
+    elif: (elif_block
+      (elif_statement condition: (expression))
       (custom_statement
-        (custom_tag)))
-    elif: (elif_statement
+        (custom_tag))
+    )
+    elif: (elif_block
+      (elif_statement
       condition: (expression))
-    else: (else_statement)))
+    )
+
+    else: (else_block
+      (else_statement)
+      (if_end_statement)
+    )
+  )
+)
 
 ================================================================================
 nested if
@@ -62,10 +79,15 @@ nested if
 --------------------------------------------------------------------------------
 
 (template
-  (if_statement
-    condition: (expression)
-    body: (if_statement
-      condition: (expression))))
+  (if_block
+    (if_start_statement condition: (expression))
+    body: (if_block
+      (if_start_statement condition: (expression))
+      (if_end_statement)
+    )
+    (if_end_statement)
+  )
+)
 
 ================================================================================
 nested else
@@ -81,14 +103,23 @@ nested else
 --------------------------------------------------------------------------------
 
 (template
-  (if_statement
-    condition: (expression)
-    else: (else_statement
-      body: (if_statement
-        condition: (expression)
+  (if_block
+    (if_start_statement condition: (expression))
+    else: (else_block
+      (else_statement)
+      body: (if_block
+        (if_start_statement condition: (expression))
         body: (text)
-        else: (else_statement
-          body: (text))))))
+        else: (else_block
+          (else_statement)
+          body: (text)
+          (if_end_statement)
+        )
+      )
+      (if_end_statement)
+    )
+  )
+)
 
 ================================================================================
 nested elif
@@ -110,20 +141,32 @@ nested elif
 --------------------------------------------------------------------------------
 
 (template
-  (if_statement
-    condition: (expression)
-    elif: (elif_statement
-      condition: (expression)
-      (if_statement
-        condition: (expression)
+  (if_block
+    (if_start_statement condition: (expression))
+    elif: (elif_block
+      (elif_statement condition: (expression))
+      (if_block
+        (if_start_statement condition: (expression))
         body: (text)
-        elif: (elif_statement
-          condition: (expression)
-          (text))))
-    elif: (elif_statement
-      condition: (expression)
-      (if_statement
-        condition: (expression)
+        elif: (elif_block
+          (elif_statement condition: (expression))
+          (text)
+        )
+        (if_end_statement)
+      )
+    )
+    elif: (elif_block
+      (elif_statement condition: (expression))
+      (if_block
+        (if_start_statement condition: (expression))
         body: (text)
-        else: (else_statement
-          body: (text))))))
+        else: (else_block
+          (else_statement)
+          body: (text)
+          (if_end_statement)
+        )
+      )
+    )
+    (if_end_statement)
+  )
+)

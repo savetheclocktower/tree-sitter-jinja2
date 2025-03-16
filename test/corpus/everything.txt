@@ -68,11 +68,17 @@ Whitespace control
     (custom_tag))
   (custom_statement
     (custom_tag))
-  (if_statement
-    (expression)
-    (elif_statement
-      (expression))
-    (else_statement)))
+  (if_block
+    (if_start_statement (expression))
+    (elif_block
+      (elif_statement (expression))
+    )
+    (else_block
+      (else_statement)
+      (if_end_statement)
+    )
+  )
+)
 
 ================================================================================
 for statement
@@ -87,13 +93,20 @@ bar
 --------------------------------------------------------------------------------
 
 (template
-  (for_statement
-    iteration: (expression))
-  (for_statement
-    iteration: (expression)
+  (for_block
+    (for_start_statement iteration: (expression))
+    (for_end_statement)
+  )
+  (for_block
+    (for_start_statement iteration: (expression))
     body: (text)
-    (for_else_statement
-      body: (text))))
+    (for_else_block
+      (for_else_statement)
+      body: (text)
+      (for_end_statement)
+    )
+  )
+)
 
 ================================================================================
 include statement
@@ -128,11 +141,16 @@ body
 --------------------------------------------------------------------------------
 
 (template
-  (macro_statement
-    signature: (expression)
-    (text))
-  (macro_statement
-    signature: (expression)))
+  (macro_block
+    (macro_start_statement signature: (expression))
+    (text)
+    (macro_end_statement)
+  )
+  (macro_block
+    (macro_start_statement signature: (expression))
+    (macro_end_statement)
+  )
+)
 
 ================================================================================
 call statement
@@ -143,9 +161,12 @@ c
 --------------------------------------------------------------------------------
 
 (template
-  (call_statement
-    call: (expression)
-    (text)))
+  (call_block
+    (call_start_statement call: (expression))
+    (text)
+    (call_end_statement)
+  )
+)
 
 ================================================================================
 filter statement
@@ -155,8 +176,11 @@ filter statement
 --------------------------------------------------------------------------------
 
 (template
-  (filter_statement
-    (expression)))
+  (filter_block
+    (filter_start_statement (expression))
+    (filter_end_statement)
+  )
+)
 
 ================================================================================
 assignment statement
@@ -196,18 +220,28 @@ block statement
 --------------------------------------------------------------------------------
 
 (template
-  (block_statement
-    (identifier)
-    (text))
-  (block_statement
-    (identifier)
-    (identifier))
-  (block_statement
-    (identifier))
-  (block_statement
-    (identifier))
-  (block_statement
-    (identifier)))
+  (block_block
+    (block_start_statement (identifier))
+    (text)
+    (block_end_statement)
+  )
+  (block_block
+    (block_start_statement (identifier))
+    (block_end_statement (identifier))
+  )
+  (block_block
+    (block_start_statement (identifier))
+    (block_end_statement)
+  )
+  (block_block
+    (block_start_statement (identifier))
+    (block_end_statement)
+  )
+  (block_block
+    (block_start_statement (identifier))
+    (block_end_statement)
+  )
+)
 
 ================================================================================
 import statement
@@ -254,10 +288,16 @@ asdfj
 --------------------------------------------------------------------------------
 
 (template
-  (with_statement
-    (text))
-  (with_statement
-    assignment: (expression)))
+  (with_block
+    (with_start_statement)
+    (text)
+    (with_end_statement)
+  )
+  (with_block
+    (with_start_statement assignment: (expression))
+    (with_end_statement)
+  )
+)
 
 ================================================================================
 raw statement
@@ -270,8 +310,12 @@ raw statement
 --------------------------------------------------------------------------------
 
 (template
-  (raw_statement
-    (text)))
+  (raw_block
+    (raw_start_statement)
+    (text)
+    (raw_end_statement)
+  )
+)
 
 ================================================================================
 custom tag statement
@@ -309,24 +353,33 @@ nest deep
 --------------------------------------------------------------------------------
 
 (template
-  (if_statement
-    condition: (expression)
-    body: (for_statement
-      iteration: (expression)
-      body: (macro_statement
-        signature: (expression)
-        (with_statement
-          (call_statement
-            call: (expression)
-            (block_statement
-              id: (identifier)
-              (custom_statement
-                (custom_tag))))
-          (custom_statement
-            (custom_tag)))
-        (custom_statement
-          (custom_tag)))
-      body: (custom_statement
-        (custom_tag)))
-    body: (custom_statement
-      (custom_tag))))
+  (if_block
+    (if_start_statement condition: (expression))
+    body: (for_block
+      (for_start_statement iteration: (expression))
+      body: (macro_block
+        (macro_start_statement signature: (expression))
+        (with_block
+          (with_start_statement)
+          (call_block
+            (call_start_statement call: (expression))
+            (block_block
+              (block_start_statement id: (identifier))
+              (custom_statement (custom_tag))
+              (block_end_statement)
+            )
+            (call_end_statement)
+          )
+          (custom_statement (custom_tag))
+          (with_end_statement)
+        )
+        (custom_statement (custom_tag))
+        (macro_end_statement)
+      )
+      body: (custom_statement (custom_tag))
+      (for_end_statement)
+    )
+    body: (custom_statement (custom_tag))
+    (if_end_statement)
+  )
+)

@@ -1,38 +1,31 @@
+// eslint-disable-next-line spaced-comment
+/// <reference types="tree-sitter-cli/dsl" />
+// @ts-check
+
+/**
+ * @param  {Rule} rule
+ * @param  {string} separator
+ * @return {SeqRule}
+ */
 function sep1(rule, separator) {
   return seq(rule, repeat(seq(separator, rule)));
 }
 
-function statement_start() {
-  return alias(/\{\%[\+\-]?/, "statement_start");
-}
-
-function statement_end() {
-  return alias(/[\+\-]?\%\}/, "statement_end");
-}
-
-/**
- * Matches something like `{% <kw> ...rest %}`
- */
-function statement(kw, ...rest) {
-  return seq(statement_start(), keyword(kw), ...rest, statement_end());
+function __statement($, ...rest) {
+  return seq($._statement_start, ...rest, $._statement_end);
 }
 
 function expression_in_statement($) {
   return alias($._expression_in_statement, $.expression);
 }
 
-function keyword(kw) {
-  return alias(token(prec(1, kw)), "_keyword");
-}
-
-function context_specifier() {
-  return choice(keyword("with context"), keyword("without context"));
-}
-
 module.exports = grammar({
-  name: "jinja2",
+  name: 'jinja2',
+
   word: ($) => $.identifier,
-  conflicts: ($) => [[$.elif_statement]],
+
+  conflicts: ($) => [[$.elif_block]],
+
   rules: {
     template: ($) => repeat($._item),
 
@@ -51,159 +44,244 @@ module.exports = grammar({
 
     _expression_in_statement: () => repeat1(/[^\s\%\-\+]+|[\%\-\+]/),
 
+    _statement_start: (_) => choice("{%", "{%+", "{%-"),
+    _statement_end: (_) => choice("%}", "+%}", "-%}"),
+
     _statement: ($) =>
       choice(
-        $.for_statement,
-        $.if_statement,
-        $.macro_statement,
-        $.call_statement,
-        $.filter_statement,
+        $.for_block,
+        $.if_block,
+        $.macro_block,
+        $.call_block,
+        $.filter_block,
         $.assignment_statement,
         $.end_assignment_statement,
         $.extends_statement,
-        $.block_statement,
+        $.block_block,
         $.include_statement,
         $.import_statement,
-        $.with_statement,
-        $.raw_statement,
+        $.with_block,
+        $.raw_block,
         $.custom_statement,
       ),
 
-    for_statement: ($) =>
+    for_start_statement: ($) => __statement(
+      $,
+      'for',
+      field('iteration', expression_in_statement($))
+    ),
+
+    for_block: ($) =>
       seq(
-        statement("for", field("iteration", expression_in_statement($))),
-        field("body", repeat($._item)),
-        choice($.for_else_statement, statement("endfor")),
-      ),
-    for_else_statement: ($) =>
-      seq(
-        statement("else"),
-        field("body", repeat($._item)),
-        statement("endfor"),
+        $.for_start_statement,
+        field('body', repeat($._item)),
+        choice($.for_else_block, $.for_end_statement),
       ),
 
-    if_statement: ($) =>
+    for_else_statement: ($) => __statement($, 'else'),
+
+    for_end_statement: ($) => __statement($, 'endfor'),
+
+    for_else_block: ($) =>
       seq(
-        statement("if", field("condition", expression_in_statement($))),
-        field("body", repeat($._item)),
-        field("elif", repeat($.elif_statement)),
-        choice(field("else", $.else_statement), statement("endif")),
+        $.for_else_statement,
+        field('body', repeat($._item)),
+        $.for_end_statement,
       ),
 
-    elif_statement: ($) =>
+    if_start_statement: ($) => __statement(
+      $,
+      'if',
+      field('condition', expression_in_statement($))
+    ),
+
+    if_end_statement: ($) => __statement($, 'endif'),
+
+    if_block: ($) =>
       seq(
-        statement("elif", field("condition", expression_in_statement($))),
+        $.if_start_statement,
+        field('body', repeat($._item)),
+        field('elif', repeat($.elif_block)),
+        choice(field('else', $.else_block), $.if_end_statement),
+      ),
+
+    elif_statement: ($) => __statement(
+      $,
+      'elif',
+      field('condition', expression_in_statement($))
+    ),
+
+    elif_block: ($) =>
+      seq(
+        $.elif_statement,
         repeat($._item),
       ),
 
-    else_statement: ($) =>
+    else_statement: ($) => __statement($, 'else'),
+
+    else_block: ($) =>
       seq(
-        statement("else"),
-        field("body", repeat($._item)),
-        statement("endif"),
+        $.else_statement,
+        field('body', repeat($._item)),
+        $.if_end_statement,
       ),
 
-    macro_statement: ($) =>
-      seq(
-        statement("macro", field("signature", expression_in_statement($))),
-        repeat($._item),
-        statement("endmacro"),
+    macro_start_statement: ($) => __statement(
+      $,
+      'macro',
+      field('signature', expression_in_statement($))
+    ),
+
+    macro_end_statement: ($) => __statement($, 'endmacro'),
+
+    macro_block: ($) => seq(
+      $.macro_start_statement,
+      repeat($._item),
+      $.macro_end_statement
+    ),
+
+    call_start_statement: ($) => __statement(
+      $,
+      'call',
+      field('call', expression_in_statement($))
+    ),
+
+    call_end_statement: ($) => __statement($, 'endcall'),
+
+    call_block: ($) => seq(
+      $.call_start_statement,
+      repeat($._item),
+      $.call_end_statement
+    ),
+
+    filter_start_statement: ($) => __statement(
+      $,
+      'filter',
+      field('code', expression_in_statement($))
+    ),
+
+    filter_end_statement: ($) => __statement($, 'endfilter'),
+
+    filter_block: ($) => seq(
+      $.filter_start_statement,
+      repeat($._item),
+      $.filter_end_statement
+    ),
+
+    assignment_statement: ($) => __statement(
+      $,
+      'set',
+      field('code', expression_in_statement($))
+    ),
+
+    end_assignment_statement: ($) => __statement($, 'endset'),
+
+    extends_statement: ($) => __statement(
+      $,
+      'extends',
+      expression_in_statement($)
+    ),
+
+    block_start_statement: ($) =>
+      __statement(
+        $,
+        'block',
+        field('id', $.identifier),
+        optional('scoped'),
+        optional('required'),
       ),
 
-    call_statement: ($) =>
-      seq(
-        statement("call", field("call", expression_in_statement($))),
-        repeat($._item),
-        statement("endcall"),
-      ),
+    block_end_statement: ($) => __statement(
+      $,
+      'endblock',
+      optional($.identifier)
+    ),
 
-    filter_statement: ($) =>
-      seq(
-        statement("filter", field("code", expression_in_statement($))),
-        repeat($._item),
-        statement("endfilter"),
-      ),
-
-    assignment_statement: ($) =>
-      statement("set", field("code", expression_in_statement($))),
-
-    end_assignment_statement: ($) => statement("endset"),
-
-    extends_statement: ($) => statement("extends", expression_in_statement($)),
-
-    block_statement: ($) =>
-      seq(
-        statement(
-          "block",
-          field("id", $.identifier),
-          optional(keyword("scoped")),
-          optional(keyword("required")),
-        ),
-        repeat($._item),
-        statement("endblock", optional($.identifier)),
-      ),
+    block_block: ($) => seq(
+      $.block_start_statement,
+      repeat($._item),
+      $.block_end_statement
+    ),
 
     include_statement: ($) =>
-      statement(
-        "include",
+      __statement(
+        $,
+        'include',
         choice($.string, $.identifier),
-        optional(alias("ignore missing", "_keyword")),
-        optional(context_specifier()),
+        optional('ignore missing'),
+        optional($._context_specifier),
       ),
+
     import_statement: ($) =>
       choice(
-        statement(
-          "import",
-          field("id", $.string),
-          alias("as", "_keyword"),
+        __statement(
+          $,
+          'import',
+          field('id', $.string),
+          'as',
           $.identifier,
-          optional(context_specifier()),
+          optional($._context_specifier)
         ),
-        statement(
-          "from",
-          field("id", $.string),
-          keyword("import"),
+        __statement(
+          $,
+          'from',
+          field('id', $.string),
+          'import',
           sep1(
             choice(
               $.identifier,
-              seq($.identifier, keyword("as"), $.identifier),
+              seq(
+                $.identifier,
+                'as',
+                $.identifier
+              )
             ),
-            ",",
+            ','
           ),
-          optional(context_specifier()),
-        ),
+          optional($._context_specifier)
+        )
       ),
 
-    with_statement: ($) =>
+    _context_specifier: (_) => choice(
+      'with context',
+      'without context'
+    ),
+
+    with_start_statement: ($) => __statement(
+      $,
+      'with',
+      optional(
+        field('assignment', expression_in_statement($))
+      ),
+    ),
+
+    with_end_statement: ($) => __statement($, 'endwith'),
+
+    with_block: ($) =>
       seq(
-        statement(
-          "with",
-          optional(field("assignment", expression_in_statement($))),
-        ),
+        $.with_start_statement,
         repeat($._item),
-        statement("endwith"),
+        $.with_end_statement,
       ),
 
-    raw_statement: ($) =>
+    raw_start_statement: ($) => __statement($, 'raw'),
+
+    raw_end_statement: ($) => __statement($, 'endraw'),
+
+    raw_block: ($) =>
       seq(
-        alias(
-          token(seq(statement_start(), /\s*raw\s*/, statement_end())),
-          "raw_start",
-        ),
+        $.raw_start_statement,
         $.text,
-        alias(
-          token(seq(statement_start(), /\s*endraw\s*/, statement_end())),
-          "raw_end",
-        ),
+        $.raw_end_statement
       ),
 
     custom_statement: ($) =>
       prec.dynamic(
         -1,
         seq(
-          statement_start(),
+          $._statement_start,
           alias($._expression_in_statement, $.custom_tag),
-          statement_end(),
+          $._statement_end,
         ),
       ),
 
